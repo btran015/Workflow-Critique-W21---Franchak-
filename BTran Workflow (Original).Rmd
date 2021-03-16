@@ -1,0 +1,120 @@
+---
+title: "BTran Workflow (Original)"
+date: 3/7/21
+output: html_document
+---
+#Coder data collected from subjectively evaluating N=28 transcripts of recorded Triadic Pediatric Asthma Consultations (i.e., child patient, parent, healthcare provider)
+
+```{r}
+data<-Asthma_Ratings_Data_Clean_
+colnames(data)
+
+#Exploring average proportion of conversation breakdown by speaker
+summary(dat$doc_prop) #54.5% average
+summary(data$par_prop) #33.4% average
+summary(data$child_prop) #13.2% average
+
+#Evaluating conversation dynamics acoss strategies -- see summaries for each variable type
+summary(data)
+
+#General patient-provider strategies (aggregated)
+confirm<-c(data$confirm_child, data$confirm_par)
+summary(confirm)
+
+encourage<- c(data$enc_child, data$enc_par)
+summary(encourage)
+
+teachback<- c(data$tb_child, data$tb_par)
+summary(teachback)
+
+share<-c(data$share_child, data$share_par)
+summary(share)
+summary(data$share_child) 
+summary(data$share_par)
+#children shared their experience less often than parents speaking on their behalf about their illness condition
+
+colnames(data)
+summary(data$lang_inapp)
+summary(data$lang_app)
+summary(data$lang_inapp2)
+summary(data$lang_app2)
+data$lang_app==data$lang_app2 #checking whether or not the proportions reported match across rater's own subjective evaluations (at start and end of the coding survey) -- suggests there may be some noise in the data, as the means tend to get higher in ratings at start vs after reviewing the transcript more closely
+
+summary(data$lang_song)
+
+summary(data$severe)
+
+summary(data$trust_par)
+summary(data$trust_child)
+summary(data$trust_overall)
+(6.23+5.38)/2
+#note discrepancy between "overall" rating (6.4 > 5.8) average of parent and child average scores.
+summary(data)
+
+#General use of positive strategies toward child vs parents
+colnames(data)
+childPE<-c(data$focus_child, data$concern_child, data$ov_child, data$ac_child)
+
+colnames(data)[colnames(data) == "foucs_child"] <- "focus_child"
+colnames(data)
+childPE<-c(data$focus_child, data$concern_child, data$ov_child)
+summary(childPE)
+
+parentPE<-c(data$focus_par, data$concern_par, data$ov_par)
+summary(parentPE)
+#comparing children and adults, parent were perceived to be more EMPOWERED by the physicians' efforts during the interaction
+
+
+#General evaluation of doctor
+docPosEv<- c(data$doc_att, data$doc_info, data$doc_emo,data$lang_app,data$lang_app2, data$ac_child, data$ac_par)
+summary(docPosEv)
+
+docNegEv<- c(data$lang_inapp, data$dwp_child, data$dwp_par)
+summary(docNegEv)
+
+
+#Ratings of Doctor and Parent traits
+docPosTrait<- c(data$doc_warm, data$doc_interest, data$doc_symp, data$doc_profess, data$doc_comp, data$doc_satis, data$doc_gen)
+summary(docPosTrait)
+
+docNegTrait<- c(data$doc_anx, data$doc_hostile, data$doc_domin)
+summary(docNegTrait)
+
+#Ratings of the evaluation overall
+posEv<- c(data$dynamic, data$compass)
+negEv<- c(data$rigid, data$rush)
+
+summary(posEv)
+summary(negEv)
+
+#Regressions predicting outcome ratings from ratings of the interaction
+lm1<- summary(lm(posEv ~ docPosTrait * docNegTrait))
+lm2<- summary(lm(posEv~data$rigid * data$rush, data=data))
+#not sure why this isn't happy... i don't have any missing data that i'm aware of.
+docPosTrait
+docNegTrait
+class(docPosTrait)
+class(docNegTrait)
+summary(lm1)
+summary(lm2)
+
+
+#correlations since the regressions wont seem to run...
+cor(posEv, negEv, docPosTrait, docNegTrait)
+cor.test(posEv, negEv, docPosTrait, docNegTrait)
+cor.test(posEv, negEv, data$agenda_child, data$agenda_par, doc_prop, par_prop, child_prop)
+cor.test(data$enc_child, data$enc_par, data$turntake, data$mutual, posEv, negEv)
+
+
+
+#Figures/Graphs (of what can be graphed...)
+install.packages("ggplot2")
+library(ggplot2)
+
+ggplot(data, aes(doc_prop, par_prop, color=child_prop)) + geom_point()+geom_smooth(method="lm")
+#proportion breakdown by speaker
+
+```
+
+
+

@@ -1,0 +1,234 @@
+---
+title: "BTran Workflow (Revised)"
+date: 3/7/21
+output: html_document
+---
+#Prepping workspace, loading in new packages/functions from Tidyverse.
+```{r}
+#Load packages
+library(tidyverse)
+library(vroom)
+library(here)
+library(janitor)
+
+rm(list = ls()) #Clean out workspace
+```
+
+#Coder data collected from subjectively evaluating N=28 transcripts of recorded Triadic Pediatric Asthma Consultations (i.e., child patient, parent, healthcare provider)
+
+
+#Reading in the dataset, setting all colnames to lowercase. General viewing of data to see if it "looks" right in general.
+```{r}
+library(readxl)
+Asthma_Ratings_Data_Clean_ <- read_excel("Asthma Ratings Data (Clean).xlsx")
+View(Asthma_Ratings_Data_Clean_)
+setwd("Users/brandontran/Documents/School Work/PSYC 259 (R - Franchak)/Workflow Critique/Markdown")
+
+data1<- (Asthma_Ratings_Data_Clean_)
+
+file_names <- list.files("Asthma_Ratings_Data_Clean_", full.names = T)
+map(file_names, ~tolower(colnames)
+```
+
+#Checking the data more broadly, attempting to use a for loop to automate the removal of missing data.
+```{r}
+data2<-Asthma_Ratings_Data_Clean_
+colnames(data2)
+
+for (file in file_names) {
+  print(file)
+
+  #Loop through file names
+for (file in file_names) {
+  #Read the new data into a temporary dataset
+temp_ds <- read_csv(file,  skip = 0, col_names = c("sn" "ra" "coder" "doc_prop" "par_prop"     "child_prop"    "prop_confirm"  "turntake"      "conflict"      "interfere"    "enc_child"     "enc_par"       "tb_par"        "tb_child"      "share_child"  "share_par"     "lang_inapp"    "lang_app"      "lang_song"     "confirm_par"  "confirm_child" "severe"        "trust_par" "trust_child"   "trust_overall""rapport"       "conv_part"     "mutual"        "focus_par" "foucs_child"  "doc_att"       "concern_child" "concern_par"   "doc_info"      "doc_emo"      "ov_child"      "ov_par"        "child_admin"   "par_confid"    "comit"        "team_orient"   "comp_child"    "comp_par"      "lang_app2"     "lang_inapp2"  "ac_child"      "ac_par"        "dwp_child"     "dwp_par"       "agenda_child" "agenda_par"    "dynamic"       "rigid" "rush" "compass"       "doc_warm"      "doc_anx"       "doc_interest"  "doc_hostile"   "doc_symp"     
+"doc_profess"   "doc_comp"      "doc_domin"     "doc_satis"     "doc_gen"      
+"par_warm"      "par_anx"       "par_interest"  "par_hostile"   "par_symp"     
+"par_profess"   "par_comp"      "par_domin"     "par_satis"     "par_gen"      
+"trait_par"     "sn2"           "ra2"           "coder2"))
+  temp_ds$file <- file 
+  ds <- bind_rows(ds, temp_ds)
+``` 
+  
+#Exploring average proportion of conversation breakdown by speaker, writing a custom function to confirm sums to 100% for reliability. Revised to MEAN vs summary output to use function.
+```{r}
+a <- mean(data1$doc_prop) 
+b <- mean(data1$par_prop) 
+c <- mean(data1$child_prop) 
+
+a
+b
+c
+
+prop_total <- function(a, b, c) {sum(a + b + c)}
+prop_total(a, b, c) 
+```  
+#Visualizing communication strategies identified - plotting strategies to explore prevalence. Using VisDat package to explore prevalence of strategies across data sample and raters.
+```{r}
+install.packages("ggplot2")
+library(ggforce)
+library(ggplot2)
+
+library(DataExplorer)
+plot_bar(data2) #Frequencies of all categorical variables
+plot_histogram(data2) #Histograms of all continuous variables
+
+strategies<- c(data2$turntake, data2$interfere, data2$enc_child, data2$enc_par, data2$tb_par, data2$tb_child)
+strategies
+
+ds %>% 
+  ggplot(data2,aes(x = strategies, y = trust_overall, color = raters)) + 
+  geom_point()
+
+ggplot(data2, aes(turntake, interfere, enc_child, enc_par, tb_par, tb_child), shape=rater) + geom_point()+geom_smooth(method="lm")
+
+install.packages("visdat")
+library(visdat)
+vis_dat(data2) #snapshot of each column
+vis_miss(data2) #visualize missing
+```
+#Not sure why it says it cannot find ggplot? I've installed and reloaded ggplot2 and ggforce multiple times... However, the graph I'm trying to look for is how the strategies subsetted above "strategies" correlate with ratings of trust overall across subjective raters (color).
+
+#Ideally, this would depict avenues to consider for an exploratory factor analyses or how things may "stick" together to facilitate or hinder desirable care outcomes. 
+
+```{r}
+#Figures/Graphs (of what can be graphed...)
+install.packages("ggplot2")
+library(ggplot2)
+
+ggplot(data2, aes(doc_prop, par_prop, color=child_prop)) + geom_point()+geom_smooth(method="lm")
+#proportion breakdown by speaker
+
+
+```
+
+
+
+
+
+#More general analyses are listed below - with most of the workflow strategies we've learned this quarter incorporated above with the "reading" and "organizing" of the data.
+```{r}
+#General patient-provider strategies (aggregated)
+confirm<-c(data2$confirm_child, data2$confirm_par)
+summary(confirm)
+
+encourage<- c(data2$enc_child, data2$enc_par)
+summary(encourage)
+
+teachback<- c(data2$tb_child, data2$tb_par)
+summary(teachback)
+
+share<-c(data2$share_child, data2$share_par)
+summary(share)
+summary(data2$share_child) 
+summary(data2$share_par)
+#children shared their experience less often than parents speaking on their behalf about their illness condition
+
+colnames(data2)
+summary(data2$lang_inapp)
+summary(data2$lang_app)
+summary(data2$lang_inapp2)
+summary(data2$lang_app2)
+data2$lang_app==data2$lang_app2 #checking whether or not the proportions reported match across rater's own subjective evaluations (at start and end of the coding survey) -- suggests there may be some noise in the data, as the means tend to get higher in ratings at start vs after reviewing the transcript more closely
+```
+
+
+```{r}
+summary(data2$lang_song)
+summary(data2$severe)
+summary(data2$trust_par)
+summary(data2$trust_child)
+summary(data2$trust_overall)
+(6.23+5.38)/2
+#note discrepancy between "overall" rating (6.4 > 5.8) average of parent and child average scores.
+summary(data)
+```
+
+#Creating a function here to automate calculations for confirmation.
+```{r}
+x <- mean(data2$trust_par) 
+y <- mean(data2$trust_child) 
+z <- mean(data2$trust_overall) 
+
+x
+y
+z
+
+trust_total <- function(x, y) {sum((x + y)/2)}
+trust_total(x, y) 
+trust_total(x, y) == z 
+z
+#note, x+y/2 does NOT equal z (trust_overall composite).
+```
+
+#Additional analyses
+```{r} 
+#General use of positive strategies toward child vs parents
+colnames(data)
+childPE<-c(data$focus_child, data$concern_child, data$ov_child, data$ac_child)
+
+colnames(data)[colnames(data) == "focus_child"] <- "focus_child"
+colnames(data)
+childPE<-c(data$focus_child, data$concern_child, data$ov_child)
+summary(childPE)
+
+parentPE<-c(data$focus_par, data$concern_par, data$ov_par)
+summary(parentPE)
+#comparing children and adults, parent were perceived to be more EMPOWERED by the physicians' efforts during the interaction
+
+
+#General evaluation of doctor
+docPosEv<- c(data$doc_att, data$doc_info, data$doc_emo,data$lang_app,data$lang_app2, data$ac_child, data$ac_par)
+summary(docPosEv)
+
+docNegEv<- c(data$lang_inapp, data$dwp_child, data$dwp_par)
+summary(docNegEv)
+
+
+#Ratings of Doctor and Parent traits
+docPosTrait<- c(data$doc_warm, data$doc_interest, data$doc_symp, data$doc_profess, data$doc_comp, data$doc_satis, data$doc_gen)
+summary(docPosTrait)
+
+docNegTrait<- c(data$doc_anx, data$doc_hostile, data$doc_domin)
+summary(docNegTrait)
+
+#Ratings of the evaluation overall
+posEv<- c(data$dynamic, data$compass)
+negEv<- c(data$rigid, data$rush)
+
+summary(posEv)
+summary(negEv)
+
+#Regressions predicting outcome ratings from ratings of the interaction
+lm1<- summary(lm(posEv ~ docPosTrait * docNegTrait))
+lm2<- summary(lm(posEv~data$rigid * data$rush, data=data))
+#not sure why this isn't happy... i don't have any missing data that i'm aware of.
+docPosTrait
+docNegTrait
+class(docPosTrait)
+class(docNegTrait)
+summary(lm1)
+summary(lm2)
+
+
+#correlations since the regressions wont seem to run...
+cor(posEv, negEv, docPosTrait, docNegTrait)
+cor.test(posEv, negEv, docPosTrait, docNegTrait)
+cor.test(posEv, negEv, data$agenda_child, data$agenda_par, doc_prop, par_prop, child_prop)
+cor.test(data$enc_child, data$enc_par, data$turntake, data$mutual, posEv, negEv)
+
+```
+
+#StackOverflow suggests a package called "Pander"? that allows you to render objects - but it doesn't seem to work in my markdown file...
+```{r}
+install.packages("rmarkdown")
+install.packages("pander")
+??render
+??pander
+
+render(head,"Btran workflow (revised).Rmd", "pdf_document")
+pander("Btran workflow (revised).Rmd", "pdf_document")
+knitr("Btran workflow (revised).Rmd", "pdf_document")
+
+#Gives me an error when trying to "Knit" my HTML document together. It states "Line 22: Error in parse(text = x, srcfile = src) : <text>: 10:0: unexpected end of input 8: file_names <- ...."
+
